@@ -17,6 +17,12 @@ module BunnyRPC
         service_methods.each { |method| configure_queue(method) }
       end
 
+      def stop
+        puts "Stopping #{@service_name}."
+        self.channel.close
+        self.connection.close
+      end
+
       def configure_queue(queue_name)
         @queue = channel.queue("#{@service_name}.#{queue_name}", :auto_delete => true)
 
@@ -49,6 +55,10 @@ module BunnyRPC
 
       def channel
         Channel.channel
+      end
+
+      def connection
+        Channel.connection
       end
 
     end

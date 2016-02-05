@@ -11,4 +11,9 @@ module MyService
   end
 end
 
-MyService.start
+begin
+  MyService.start
+rescue Interrupt => _
+  MyService.stop
+  exit(0)
+end
