@@ -1,11 +1,6 @@
 source 'https://rubygems.org'
 gemspec
 
-gem 'rake'
-gem 'activesupport'
-
-gem 'bunny'
-
 group :development do
 
 end

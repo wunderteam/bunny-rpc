@@ -11,8 +11,10 @@ Gem::Specification.new do |s|
   s.summary     = 'A toolkit for microservices over RabbitMQ'
   s.description = 'A toolkit for microservices over RabbitMQ'
 
-  s.required_ruby_version     = '>= 2.2.0'
-  # s.add_dependency 'json',      "~> 1.8"
+  s.required_ruby_version = '>= 2.2.0'
+  s.add_dependency 'rake'
+  s.add_dependency 'bunny',           "~> 2.2"
+  s.add_dependency 'activesupport',   ">= 4.2"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
