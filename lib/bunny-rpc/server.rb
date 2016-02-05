@@ -10,6 +10,9 @@ module BunnyRPC
         @service_name ||= self.name.split('::').last.downcase
         puts "Starting #{@service_name}..."
 
+        connection.start unless connection.status == :open
+        channel.open unless channel.status == :open
+
         @exchange = channel.default_exchange
         channel.confirm_select                              # < enable confirmation
         @exchange.on_return { |info| @return_info = info }  # < watch for underliverable messages
@@ -18,9 +21,9 @@ module BunnyRPC
       end
 
       def stop
-        puts "Stopping #{@service_name}."
+        puts "Stopping #{@service_name}..."
         self.channel.close
-        self.connection.close
+        puts "Stopped. Channel: #{self.channel.status} - Connection: #{self.connection.status}"
       end
 
       def configure_queue(queue_name)

@@ -12,27 +12,22 @@ module MockClient
 end
 
 describe MockClient do
+  before :all do
+    thread = TestServiceMacros.start
+  end
+
+  after :all do
+    thread = TestServiceMacros.stop
+  end
+
   it 'is a test spec' do
     expect(true).to eq(true)
   end
 
-  describe 'dispatches message to rpc client' do
-    before { allow(MockClient.client).to receive(:dispatch){ true } }
-    before { MockClient.do_thing('hello world') }
-
-    it { expect(MockClient.client).to have_received(:dispatch).with(:do_thing, 'hello world') }
-  end
-
-  # describe 'moqueue' do
-  #   let(:mq) { MQ.new }
-  #   let(:queue) { queue = mq.queue('mocktacular') }
-  #   before do
-  #     topic = mq.topic("lolz")
-  #     queue.bind(topic, :key=> "cats.*")
-  #     queue.subscribe {|header, msg| puts [header.routing_key, msg]}
-  #     topic.publish("eatin ur foodz", :key => "cats.inUrFridge")
-  #   end
+  # describe 'dispatches message to rpc client' do
+  #   before { allow(MockClient.client).to receive(:dispatch){ true } }
+  #   before { MockClient.do_thing('hello world') }
   #
-  #   it { expect(queue.received_message?('eatin ur foodz')).to eq(true) }
+  #   it { expect(MockClient.client).to have_received(:dispatch).with(:do_thing, 'hello world') }
   # end
 end

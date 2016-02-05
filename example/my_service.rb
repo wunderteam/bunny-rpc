@@ -1,5 +1,4 @@
 dir = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
-puts "LOADING: #{File.join(dir, 'bunny-rpc')}"
 require File.join(dir, 'bunny-rpc')
 
 module MyService
