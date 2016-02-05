@@ -1,10 +1,7 @@
 source 'https://rubygems.org'
 gemspec
 
-group :development do
-
-end
-
-group :test do
+group :development, :test do
+  gem 'rake'
   gem 'rspec',    '~> 3.4'
 end
