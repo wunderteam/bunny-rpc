@@ -1,7 +1,6 @@
 require_relative 'bunny_rpc'
 
 module MyServiceClient
-
   def self.client(timeout: 5)
     @client ||= BunnyRPC::Client.new('my_service', timeout: timeout)
   end
