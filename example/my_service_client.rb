@@ -1,4 +1,5 @@
-require_relative 'bunny_rpc'
+dir = File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib'))
+require File.join(dir, 'bunny-rpc')
 
 module MyServiceClient
   def self.client(timeout: 5)
@@ -14,3 +15,6 @@ module MyServiceClient
     client.dispatch(:bogus_method, argument)
   end
 end
+
+response = MyServiceClient.do_thing('hello world ')
+puts "Check it out: #{response}"

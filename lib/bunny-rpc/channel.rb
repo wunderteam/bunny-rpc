@@ -1,5 +1,3 @@
-require 'bunny'
-
 module BunnyRPC
   module Channel
     def self.connection
