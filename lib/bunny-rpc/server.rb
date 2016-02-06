@@ -28,10 +28,10 @@ module BunnyRPC
 
         @queue.subscribe(:block => true) do |delivery_info, properties, payload|
           @return_info = nil
-          response = self.send(properties.type, payload)
+          response = self.send(properties.type, JSON.parse(payload))
 
           puts "Publishing response: #{response}.."
-          @exchange.publish(response,
+          @exchange.publish(JSON.dump(response),
             routing_key: properties.reply_to,
             correlation_id: properties.correlation_id,
             mandatory: true)

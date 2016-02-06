@@ -12,6 +12,7 @@ Gem::Specification.new do |s|
   s.description = 'A toolkit for microservices over RabbitMQ'
 
   s.required_ruby_version = '>= 2.2.0'
+  s.add_dependency 'json'
   s.add_dependency 'bunny',           "~> 2.2"
   s.add_dependency 'activesupport',   ">= 4.2"
 

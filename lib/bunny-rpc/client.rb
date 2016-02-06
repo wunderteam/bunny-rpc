@@ -25,7 +25,7 @@ module BunnyRPC
       self.return_info    = nil
       self.correlation_id = SecureRandom.uuid
 
-      self.publish(method_name, argument)
+      self.publish(method_name, JSON.dump(argument))
 
       channel.wait_for_confirms
       handle_return if return_info
@@ -36,8 +36,8 @@ module BunnyRPC
       response
     end
 
-    def publish(method_name, argument)
-      @exchange.publish(argument,
+    def publish(method_name, json)
+      @exchange.publish(json,
         routing_key:      "#{service_name}.#{method_name}",
         type:             method_name,
         correlation_id:   correlation_id,
@@ -70,6 +70,8 @@ module BunnyRPC
       self.reply_queue = channel.queue('', :exclusive => true, :auto_delete => true)
 
       self.reply_queue.subscribe do |delivery_info, properties, payload|
+        payload = JSON.parse(payload)
+
         if properties[:correlation_id] == self.correlation_id
           self.response = payload
           self.lock.synchronize{self.condition.signal}

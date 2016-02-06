@@ -5,8 +5,9 @@ module MyService
   include BunnyRPC::Server
   service_name 'my_service'
 
-  def self.do_thing(number)
-    number + number
+  def self.do_thing(object)
+    value = object['number'] * 10
+    { foo: value }
   end
 
   def self.do_thing_with_exception(number)
