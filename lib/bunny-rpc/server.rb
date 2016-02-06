@@ -26,6 +26,12 @@ module BunnyRPC
       end
 
       # listen for messages returned by the exchange
+      #   - a returned message indicates that the caller is no longer listening for the response.
+      #   This could be the result of a caller fault or a timeout.
+      #   - the @return_info instance var acts as a flag; if it's set after wait_for_confirms
+      #   unblocks then an UndeliverableResponse exception will be thrown
+      #   - because the exception is throwin within the rpc_wrapper block, it will propogate up and
+      #   can be used to rollback transactions
       def setup_return_listener
         channel.confirm_select
         exchange.on_return do |info|
@@ -66,8 +72,8 @@ module BunnyRPC
 
       def stop
         log.debug "Stopping #{service_queue_name}..."
-        self.channel.close
-        log.info "Stopped. [Channel Status: #{self.channel.status}]"
+        channel.close
+        log.info "Stopped. [Channel Status: #{channel.status}]"
       end
 
       # [RPC wrapper]
