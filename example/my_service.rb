@@ -3,7 +3,12 @@ require File.join(dir, 'bunny-rpc')
 
 module MyService
   include BunnyRPC::Server
-  set_service_name 'my_service'
+  service_name 'my_service'
+
+  # this can wrap the response_block in a transaction
+  wrap_rpc do |&responder|
+    responder.call
+  end
 
   def self.do_thing(object)
     value = object['number'] * 10

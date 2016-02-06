@@ -7,7 +7,7 @@ module BunnyRPC
     module ClassMethods
 
       def start
-        puts "Starting #{service_name}..."
+        puts "Starting #{service_queue_name}..."
 
         # enable confirmations and listen for returned messages
         channel.confirm_select
@@ -16,7 +16,8 @@ module BunnyRPC
         # listen on the service queue
         service_queue.subscribe(:block => true) do |info, properties, payload|
           puts "Received message: #{payload}..."
-          @return_info = nil
+          @responded    = false
+          @return_info  = nil
           process(info, properties, payload)
         end
       end
@@ -30,27 +31,38 @@ module BunnyRPC
           response = InvalidMethod
         end
 
-        respond(response, properties.reply_to, properties.correlation_id)
+        rpc_wrapper.call do
+          respond(response, properties.reply_to, properties.correlation_id)
+        end
+
+        raise InvalidRPCWrapper unless @responded
       end
 
       def respond(response, reply_queue, correlation_id)
+        @responded = true
+
         exchange.publish(JSON.dump(response),
           routing_key:    reply_queue,
           correlation_id: correlation_id,
           mandatory:      true)
 
         confirmed = channel.wait_for_confirms
-        handle_return if @return_info
+        raise UndeliverableResponse, @return_info if @return_info
       end
 
       def stop
-        puts "Stopping #{service_name}..."
+        puts "Stopping #{service_queue_name}..."
         self.channel.close
         puts "Stopped. [Channel Status: #{self.channel.status}]"
       end
 
-      def handle_return
-        puts "Still need to handle return!!! (rollback last action somehow)"
+      # [RPC wrapper]
+      def wrap_rpc(&block)
+        @rpc_wrapper = block
+      end
+
+      def rpc_wrapper
+        @rpc_wrapper ||= Proc.new{ |respond| respond.call }
       end
 
       # [AMQP elements]
@@ -59,16 +71,16 @@ module BunnyRPC
       end
 
       def service_queue
-        @service_queue ||= channel.queue(service_name, :auto_delete => true)
+        @service_queue ||= channel.queue(service_queue_name, :auto_delete => true)
       end
 
-      # [service name getter/setter]
-      def service_name
-        @service_name ||= self.name.split('::').last.downcase
+      # [service queue name getter/setter]
+      def service_name(name)
+        @service_queue_name = name
       end
 
-      def set_service_name(service_name)
-        @service_name = service_name
+      def service_queue_name
+        @service_queue_name ||= self.name.split('::').last.downcase
       end
 
       # [service method accessor]

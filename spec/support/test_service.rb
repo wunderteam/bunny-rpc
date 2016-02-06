@@ -1,6 +1,6 @@
 module TestService
   include BunnyRPC::Server
-  set_service_name 'test_service'
+  service_name 'test_service'
 
   def self.do_thing(number)
     number + number
