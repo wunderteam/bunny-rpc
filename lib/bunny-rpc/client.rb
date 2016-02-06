@@ -4,6 +4,7 @@ require 'securerandom'
 module BunnyRPC
   class Client
 
+    # TODO: must be able to send multiple arguments
     def initialize(service_name, timeout: 2)
       @service_name = service_name
       @timeout      = timeout
@@ -59,7 +60,7 @@ module BunnyRPC
         correlation_id:   @correlation_id,
         reply_to:         @reply_queue.name,
         mandatory:        true)
-        
+
       channel.wait_for_confirms
     end
 
