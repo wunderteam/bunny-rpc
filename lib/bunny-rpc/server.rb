@@ -9,20 +9,33 @@ module BunnyRPC
 
       def start
         log.info "Starting #{service_queue_name}..."
+        setup_return_listener
+        setup_queue_listener
+      end
 
-        # enable confirmations and listen for returned messages
-        channel.confirm_select
-        exchange.on_return { |info| @return_info = info }
-
-        # listen on the service queue
+      # listen on the service queue for RPC calls
+      #   - message processing and response is called from within the rpc wrapper which enables the
+      #   caller to place any activity within a transaction such that it can be rolled back if an
+      #   exception occurs anywhere along the process chain
+      def setup_queue_listener
         service_queue.subscribe(:block => true) do |info, properties, payload|
           log.debug "Received message: #{payload}..."
-          @responded    = false
-          @return_info  = nil
-          process(info, properties, payload)
+          rpc_wrapper.call { process(info, properties, payload) }
         end
       end
 
+      # listen for messages returned by the exchange
+      def setup_return_listener
+        channel.confirm_select
+        exchange.on_return do |info|
+          log.error("UndeliverableResponse - #{info}")
+          raise UndeliverableResponse
+        end
+      end
+
+      # Process RPC calls
+      #   - payload is expected to be JSON encoded
+      #   - service responses must be either a Hash or an object that responds to as_json
       def process(info, properties, payload)
         begin
           response = self.send(properties.type, JSON.parse(payload))
@@ -32,23 +45,21 @@ module BunnyRPC
           response = InvalidMethod
         end
 
-        rpc_wrapper.call do
-          respond(response, properties.reply_to, properties.correlation_id)
-        end
-
-        raise InvalidRPCWrapper unless @responded
+        respond(response, properties.reply_to, properties.correlation_id)
       end
 
+      # Encapsulates the RPC response step. Endeavour to publish the response to the caller.
+      #   - the response value must be a hash or must respond to as_json
+      #   - use channel.wait_for_confirms to ensure that the response successfully lands on a queue
+      #   - if the response message is returned by the exchange, the return listener will throw an
+      #   exception before wait_for_confirms unblocks
       def respond(response, reply_queue, correlation_id)
-        @responded = true
-
         exchange.publish(JSON.dump(response),
           routing_key:    reply_queue,
           correlation_id: correlation_id,
           mandatory:      true)
 
-        confirmed = channel.wait_for_confirms
-        raise UndeliverableResponse, @return_info if @return_info
+        channel.wait_for_confirms
       end
 
       def stop
@@ -82,11 +93,6 @@ module BunnyRPC
 
       def service_queue_name
         @service_queue_name ||= self.name.split('::').last.downcase
-      end
-
-      # [service method accessor]
-      def service_methods
-        methods(false)
       end
 
       # [Bunny client accessors]
