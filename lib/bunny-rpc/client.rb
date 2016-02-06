@@ -3,8 +3,6 @@ require 'securerandom'
 
 module BunnyRPC
   class Client
-    attr_reader :service_name, :consumer, :timeout
-    attr_accessor :response, :correlation_id, :reply_queue, :return_info
 
     def initialize(service_name, timeout: 2)
       @service_name = service_name
@@ -41,16 +39,14 @@ module BunnyRPC
     end
 
     def dispatch(method_name, arguments)
-      response       = nil
-      return_info    = nil
-      correlation_id = SecureRandom.uuid
+      @response       = nil
+      @return_info    = nil
+      @correlation_id = SecureRandom.uuid
 
       publish(method_name, arguments)
+      raise ServiceUnreachable if @return_info
 
-      channel.wait_for_confirms
-      raise ServiceUnreachable if return_info
-
-      lock.synchronize { condition.wait(lock, timeout) }
+      lock.synchronize { condition.wait(lock, @timeout) }
       timeout! if @response.nil?
 
       @response
@@ -58,12 +54,13 @@ module BunnyRPC
 
     def publish(method_name, arguments)
       exchange.publish(encode_payload(arguments),
-        routing_key:      service_name,
+        routing_key:      @service_name,
         type:             method_name,
-        correlation_id:   correlation_id,
-        reply_to:         reply_queue.name,
-        mandatory:        true
-      )
+        correlation_id:   @correlation_id,
+        reply_to:         @reply_queue.name,
+        mandatory:        true)
+        
+      channel.wait_for_confirms
     end
 
     def timeout!
