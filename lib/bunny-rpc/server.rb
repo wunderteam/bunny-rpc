@@ -1,3 +1,4 @@
+require 'logger'
 require 'active_support/concern'
 
 module BunnyRPC
@@ -7,7 +8,7 @@ module BunnyRPC
     module ClassMethods
 
       def start
-        puts "Starting #{service_queue_name}..."
+        log.info "Starting #{service_queue_name}..."
 
         # enable confirmations and listen for returned messages
         channel.confirm_select
@@ -15,7 +16,7 @@ module BunnyRPC
 
         # listen on the service queue
         service_queue.subscribe(:block => true) do |info, properties, payload|
-          puts "Received message: #{payload}..."
+          log.debug "Received message: #{payload}..."
           @responded    = false
           @return_info  = nil
           process(info, properties, payload)
@@ -51,9 +52,9 @@ module BunnyRPC
       end
 
       def stop
-        puts "Stopping #{service_queue_name}..."
+        log.debug "Stopping #{service_queue_name}..."
         self.channel.close
-        puts "Stopped. [Channel Status: #{self.channel.status}]"
+        log.info "Stopped. [Channel Status: #{self.channel.status}]"
       end
 
       # [RPC wrapper]
@@ -97,6 +98,14 @@ module BunnyRPC
         Channel.connection
       end
 
+      # [logging]
+      def logger(logger)
+        @logger = logger
+      end
+
+      def log
+        @logger ||= Logger.new(STDOUT)
+      end
     end
   end
 end

@@ -3,7 +3,9 @@ require File.join(dir, 'bunny-rpc')
 
 module MyService
   include BunnyRPC::Server
-  service_name 'my_service'
+
+  logger        Logger.new(STDOUT)
+  service_name  'my_service'
 
   # this can wrap the response_block in a transaction
   wrap_rpc do |&responder|
