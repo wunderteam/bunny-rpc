@@ -38,7 +38,7 @@ module BunnyRPC
 
     def publish(method_name, json)
       @exchange.publish(json,
-        routing_key:      "#{service_name}.#{method_name}",
+        routing_key:      service_name,
         type:             method_name,
         correlation_id:   correlation_id,
         reply_to:         reply_queue.name,
