@@ -14,4 +14,9 @@ module BunnyRPC
   class UndeliverableResponse < Error
   end
 
+  class ServiceUnreachable < Error
+  end
+
+  class ServiceTimeout < Error
+  end
 end

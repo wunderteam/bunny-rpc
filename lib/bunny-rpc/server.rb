@@ -24,19 +24,14 @@ module BunnyRPC
         end
       end
 
-      # listen for messages returned by the exchange
+      # Listen for messages returned by the exchange
       #   - a returned message indicates that the caller is no longer listening for the response.
       #   This could be the result of a caller fault or a timeout.
-      #   - the @return_info instance var acts as a flag; if it's set after wait_for_confirms
-      #   unblocks then an UndeliverableResponse exception will be thrown
       #   - because the exception is throwin within the rpc_wrapper block, it will propogate up and
       #   can be used to rollback transactions
       def setup_return_listener
         channel.confirm_select
-        exchange.on_return do |info|
-          log.error("UndeliverableResponse - #{info}")
-          @return_info = info
-        end
+        exchange.on_return { |info| @return_info = info }
       end
 
       # Process RPC calls
@@ -55,17 +50,13 @@ module BunnyRPC
         raise UndeliverableResponse if @return_info
       end
 
-      def parse_payload(payload)
-        RecursiveOpenStruct.new(JSON.parse(payload))
-      end
-
       # Encapsulates the RPC response step. Endeavour to publish the response to the caller.
       #   - the response value must be a hash or must respond to as_json
       #   - use channel.wait_for_confirms to ensure that the response successfully lands on a queue
       #   - if the response message is returned by the exchange, the return listener will throw an
       #   exception before wait_for_confirms unblocks
       def respond(response, reply_queue, correlation_id)
-        exchange.publish(JSON.dump(response),
+        exchange.publish(encode_payload(response),
           routing_key:    reply_queue,
           correlation_id: correlation_id,
           mandatory:      true)
@@ -77,6 +68,16 @@ module BunnyRPC
         log.debug "Stopping #{service_queue_name}..."
         channel.close
         log.info "Stopped. [Channel Status: #{channel.status}]"
+      end
+
+      # [parse / encode JSON]
+      def encode_payload(payload)
+        payload = payload.is_a?(Hash) ? payload : payload.as_json
+        JSON.dump(payload)
+      end
+
+      def parse_payload(payload)
+        RecursiveOpenStruct.new(JSON.parse(payload))
       end
 
       # [RPC wrapper]
