@@ -25,13 +25,7 @@ module BunnyRPC
       self.return_info    = nil
       self.correlation_id = SecureRandom.uuid
 
-      @exchange.publish(argument,
-        routing_key:      "#{service_name}.#{method_name}",
-        type:             method_name,
-        correlation_id:   correlation_id,
-        reply_to:         reply_queue.name,
-        mandatory:        true
-      )
+      self.publish(method_name, argument)
 
       channel.wait_for_confirms
       handle_return if return_info
@@ -40,6 +34,16 @@ module BunnyRPC
       handle_timeout if response.nil?
 
       response
+    end
+
+    def publish(method_name, argument)
+      @exchange.publish(argument,
+        routing_key:      "#{service_name}.#{method_name}",
+        type:             method_name,
+        correlation_id:   correlation_id,
+        reply_to:         reply_queue.name,
+        mandatory:        true
+      )
     end
 
     def handle_return
