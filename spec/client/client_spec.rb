@@ -1,17 +1,8 @@
 require 'spec_helper'
 
-module MockClient
-  def self.client(timeout: 1)
-    @client ||= BunnyRPC::Client.new('my_service', timeout: timeout)
-  end
+describe BunnyRPC::Client do
+  let(:dummy_client) { instance_double('DummyClient') }
 
-  # replace this with method missing
-  def self.do_thing(argument)
-    client.dispatch(:do_thing, argument)
-  end
-end
-
-describe MockClient do
   before :all do
     thread = TestServiceMacros.start
   end
@@ -24,10 +15,12 @@ describe MockClient do
     expect(true).to eq(true)
   end
 
-  # describe 'dispatches message to rpc client' do
-  #   before { allow(MockClient.client).to receive(:dispatch){ true } }
-  #   before { MockClient.do_thing('hello world') }
-  #
-  #   it { expect(MockClient.client).to have_received(:dispatch).with(:do_thing, 'hello world') }
-  # end
+  describe 'dispatches message to rpc client' do
+    before do
+      allow(TestClient).to receive(:client){ dummy_client }
+      allow(dummy_client).to receive(:dispatch){ true }
+    end
+    before { TestClient.do_thing('hello world') }
+    it { expect(dummy_client).to have_received(:dispatch).with(:do_thing, 'hello world') }
+  end
 end
