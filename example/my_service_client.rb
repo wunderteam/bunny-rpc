@@ -16,5 +16,6 @@ module MyServiceClient
   end
 end
 
+# response = MyServiceClient.bogus_method(number: 14)
 response = MyServiceClient.do_thing(number: 14)
 puts "Check it out: #{response}"

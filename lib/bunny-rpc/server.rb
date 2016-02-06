@@ -20,6 +20,7 @@ module BunnyRPC
       def setup_queue_listener
         service_queue.subscribe(:block => true) do |info, properties, payload|
           log.debug "Received message: #{payload}..."
+          @return_info = nil
           rpc_wrapper.call { process(info, properties, payload) }
         end
       end
@@ -29,7 +30,7 @@ module BunnyRPC
         channel.confirm_select
         exchange.on_return do |info|
           log.error("UndeliverableResponse - #{info}")
-          raise UndeliverableResponse
+          @return_info = info
         end
       end
 
@@ -46,6 +47,7 @@ module BunnyRPC
         end
 
         respond(response, properties.reply_to, properties.correlation_id)
+        raise UndeliverableResponse if @return_info
       end
 
       # Encapsulates the RPC response step. Endeavour to publish the response to the caller.
