@@ -1,4 +1,3 @@
-require 'logger'
 require 'active_support/concern'
 
 module BunnyRPC
@@ -45,7 +44,7 @@ module BunnyRPC
       #   - service responses must be either a Hash or an object that responds to as_json
       def process(info, properties, payload)
         begin
-          response = self.send(properties.type, JSON.parse(payload))
+          response = self.send(properties.type, parse_payload(payload))
         rescue JSON::ParserError => e
           response = InvalidPayload
         rescue NoMethodError => e
@@ -54,6 +53,10 @@ module BunnyRPC
 
         respond(response, properties.reply_to, properties.correlation_id)
         raise UndeliverableResponse if @return_info
+      end
+
+      def parse_payload(payload)
+        RecursiveOpenStruct.new(JSON.parse(payload))
       end
 
       # Encapsulates the RPC response step. Endeavour to publish the response to the caller.

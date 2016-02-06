@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'bunny',           "~> 2.2"
   s.add_dependency 'logger'
   s.add_dependency 'activesupport',   ">= 4.2"
+  s.add_dependency 'recursive-open-struct'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
