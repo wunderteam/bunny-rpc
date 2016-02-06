@@ -1,5 +1,8 @@
 module BunnyRPC
   class Error < StandardError
+    def as_json
+      { message: "It's an error!", code: 303 }
+    end
   end
 
   class InvalidPayload < Error

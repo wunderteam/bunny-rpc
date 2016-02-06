@@ -41,9 +41,9 @@ module BunnyRPC
         begin
           response = self.send(properties.type, parse_payload(payload))
         rescue JSON::ParserError => e
-          response = InvalidPayload
+          response = InvalidPayload.new
         rescue NoMethodError => e
-          response = InvalidMethod
+          response = InvalidMethod.new
         end
 
         respond(response, properties.reply_to, properties.correlation_id)
