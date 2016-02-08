@@ -1,7 +1,7 @@
 [![Build Status](https://circleci.com/gh/wunderteam/bunny-rpc.svg?style=svg)](https://circleci.com/gh/wunderteam/bunny-rpc)
 
-# Bunny RPC
-A thin RPC client/server based on Bunny (RabbitMQ) and toolkit for quickly building micro services. This MVP implementation focuses on solving for synchronous execution.
+# Bunny RPC Prototype
+A thin RPC client/server based on Bunny (RabbitMQ) and toolkit for quickly building micro services. At the moment this prototype implementation focuses on solving for synchronous execution.
 
 ## RPC Design Goals
   1. Set up a new services with as little conceptual overhead as possible
